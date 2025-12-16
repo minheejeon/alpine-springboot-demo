@@ -1,4 +1,4 @@
-package com.simplekey.dto;
+package com.simplekey.alpinespringbootdemo.dto;
 
 public class Todo {
 

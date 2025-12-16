@@ -1,6 +1,6 @@
-package com.simplekey.alpinespringbootdemo;
+package com.simplekey.alpinespringbootdemo.controller;
 
-import com.simplekey.dto.Todo;
+import com.simplekey.alpinespringbootdemo.dto.Todo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
