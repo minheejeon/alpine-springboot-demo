@@ -5,7 +5,7 @@
     <title>Spring boot + Alpine.js Demo</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        input {
+        /*input {
             padding: 8px;
             margin: 10px 0;
             border: 1px solid #ccc;
@@ -13,12 +13,10 @@
             width: 300px;
             box-sizing: border-box;
         }
-
         .todo-list {
             list-style: none;
             padding: 0;
         }
-
         .todo-list li {
             padding: 10px;
             border-bottom: 1px solid #eee;
@@ -26,7 +24,6 @@
             justify-content: space-between;
             align-items: center;
         }
-
         .todo-list button {
             background-color: #ff4d4d;
             color: white;
@@ -35,7 +32,6 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
         .box {
             background-color: #e0f7fa;
             border: 2px solid #00bcd4;
@@ -43,11 +39,72 @@
             margin-top: 10px;
             border-radius: 8px;
             text-align: center;
-        }
+        }*/
+
+        .completed { text-decoration: line-through; color: gray; }
+        li { margin-bottom: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div x-data="{ open: false, open2: false }">
+
+    <script th:inline="javascript">
+        // Thymeleaf가 [[${serverTodos}]] 부분을 자동으로 JSON 배열로 변환해준다.
+        const initialTodos = [[${serverTodos}]];
+        console.log("서버에서 받은 데이터: ", initialTodos);
+    </script>
+
+    <div x-data="{
+        todos: initialTodos,
+        newTask: ''
+    }" style="padding: 20px;">
+
+        <h1>Spring Boot + Alpine.js 연동 성공!</h1>
+
+        <input type="text" x-model="newTask" placeholder="할 일 추가. . ." @keydown.enter="
+            if (newTask.trim() !== '') {
+                todos.push({ text: newTask, done: false });
+                newTask = '';
+            }
+        ">
+        <button @click="
+            if(newTask.trim() !== '') {
+                todos.push({ text: newTask, done: false });
+                newTask = '';
+            }
+        ">추가</button>
+
+        <hr>
+
+        <ul>
+            <template x-for="(todo, index) in todos" :key="index">
+                <li @click="todo.done = !todo.done">
+                    <span x-text="todo.done ? '✅' : '⬜'"></span>
+                    <span x-text="todo.text" :class="todo.done ? 'completed' : ''"></span>
+                </li>
+            </template>
+        </ul>
+
+        <p>총 <span x-text="todos.length"></span>개의 할 일이 있습니다.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--<div x-data="{ open: false, open2: false }">
         <h2>x-transition으로 부드러운 효과 주기</h2>
 
         <button @click="open = !open">
@@ -76,17 +133,7 @@
         >
             <p>이 상자는 100ms(0.1초)로 아주 빠르게 움직여요!</p>
         </div>
-    </div>
-
-
-
-
-
-
-
-
-
-
+    </div>-->
 
 <!--<div x-data='{ "name": "홍길동", "message": "안녕하세요." }'>
     <h1>Welcome!</h1>
