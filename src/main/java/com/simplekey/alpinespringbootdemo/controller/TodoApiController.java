@@ -18,7 +18,7 @@ public class TodoApiController {
     }
 
     @GetMapping
-    public List<Todo> getodos() {
+    public List<Todo> getTodos() {
         return todoList; // 리스트를 반환하면 Spring이 JSON으로 변환하여 리턴해준다.
     }
 
@@ -26,6 +26,12 @@ public class TodoApiController {
     public List<Todo> addTodo(@RequestBody Todo newTodo) {
         todoList.add(newTodo);
         return todoList; // 갱신된 전체 목록 다시 리턴
+    }
+
+    @DeleteMapping("/{text}") // 삭제할 항목의 텍스트 주소(Path)로 받는다.
+    public List<Todo> deleteTodo(@PathVariable String text) {
+        todoList.removeIf(todo -> todo.getText().equals(text));
+        return todoList;
     }
 
 }

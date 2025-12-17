@@ -5,7 +5,7 @@
     <title>Spring boot + Alpine.js Demo</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        /*input {
+        input {
             padding: 8px;
             margin: 10px 0;
             border: 1px solid #ccc;
@@ -13,33 +13,6 @@
             width: 300px;
             box-sizing: border-box;
         }
-        .todo-list {
-            list-style: none;
-            padding: 0;
-        }
-        .todo-list li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .todo-list button {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .box {
-            background-color: #e0f7fa;
-            border: 2px solid #00bcd4;
-            padding: 20px;
-            margin-top: 10px;
-            border-radius: 8px;
-            text-align: center;
-        }*/
 
         .completed {
             text-decoration: line-through;
@@ -53,150 +26,81 @@
     </style>
 </head>
 <body>
+    <div x-data="{
+            todos: [],
+            newText: '',
+            keyword: '',
 
-<script th:inline="javascript">
-    // Thymeleaf가 [[${serverTodos}]] 부분을 자동으로 JSON 배열로 변환해준다.
-    const initialTodos = [[${serverTodos}]];
-    console.log("서버에서 받은 데이터: ", initialTodos);
-</script>
+            // 1. 서버에서 목록 가져오기 (GET)
+            loadTodos() {
+                fetch('/api/todos')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.todos = data;
+                        console.log('데이터 로딩 완료: ', data);
+                    });
+            },
 
-<div x-data="{
-        todos: [],
-        newText: '',
-        // 1. 서버에서 목록 가져오기 (GET)
-        loadTodos() {
-            fetch('/api/todos')
+            // 2. 서버에 할 일 저장하기 (POST)
+            addTodo() {
+                if (this.newText.trim() === '') return;
+
+                fetch('/api/todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: this.newText, done: false })
+                })
                 .then(response => response.json())
-                .then(data => {
-                    this.todos = data;
-                    console.log('데이터 로딩 완료: ', data);
+                .then(updateList => {
+                this.todos = updateList;
+                this.newText = '';
                 });
-        },
+            },
+            deleteTodo(todoText) {
+                fetch('/api/todos/' + todoText, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(updateList => {
+                    this.todos = updateList;
+                });
+            },
+            get filteredTodos() {
+                if (this.keyword === '') {
+                    return this.todos;
+                }
 
-        // 2. 서버에 할 일 저장하기 (POST)
-        addTodo() {
-            if (this.newText.trim() === '') return;
+                return this.todos.filter(todo => todo.text.includes(this.keyword));
+            }
+        }" x-init="loadTodos()">
 
-            fetch('/api/todos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: this.newText, done: false })
-        })
-        .then(response => response.json())
-        .then(updateList => {
-            this.todos = updateList;
-            this.newText = '';
-        });
-        }
-    }" x-init="loadTodos()">
+        <h1>Alpine.js + Fetch API 실습</h1>
 
-    <h1>Alpine.js + Fetch API 실습</h1>
-    <div>
-        <input type="text" x-model="newText" @keydown.enter="addTodo()" placeholder="할 일 입력 후 엔터">
-        <button @click="addTodo()">추가</button>
+        <div style="margin-bottom: 20px; background: #eee; padding: 10px; border-radius: 5px;">
+            <span>🔍 검색: </span>
+            <input type="text" x-model="keyword" placeholder="할 일 검색 . . .">
+        </div>
+        <div>
+            <input type="text" x-model="newText" @keydown.enter="addTodo()" placeholder="할 일 입력 후 엔터">
+            <button @click="addTodo()">추가</button>
+        </div>
+        <hr>
+        <ul>
+            <template x-for="(todo, index) in filteredTodos" :key="index">
+                <li>
+                    <span x-text="todo.done ? '✅' : '⬜'" style="cursor: pointer;" @click="todo.done = !todo.done"></span>
+                    <span x-text="todo.text" :class="todo.done ? 'completed' : ''"></span>
+
+                    <button @click.stop="deleteTodo(todo.text)" style="background: red; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                        삭제
+                    </button>
+                </li>
+            </template>
+        </ul>
+        <div x-show="filteredTodos.length === 0 && todos.length > 0">
+            검색 결과가 없습니다. 😢
+        </div>
     </div>
 
-    <hr>
-
-    <ul>
-        <template x-for="(todo, index) in todos" :key="index">
-            <li>
-                <span x-text="todo.done ? '✅' : '⬜'" style="cursor: pointer;" @click="todo.done = !todo.done"></span>
-                <span x-text="todo.text" :class="todo.done ? 'completed' : ''"></span>
-            </li>
-        </template>
-    </ul>
-    <div x-show="todos.length === 0">
-        로딩 중이거나 할 일이 없습니다...
-    </div>
-</div>
-
-
-<!--<div x-data="{ open: false, open2: false }">
-    <h2>x-transition으로 부드러운 효과 주기</h2>
-
-    <button @click="open = !open">
-        <span x-text="open ? '숨기기' : '보이기'"></span>
-    </button>
-
-    <div
-        x-show="open"
-        x-transition
-        class="box"
-        style="display: none;"
-    >
-        <p>이 상자는 `x-transition` 덕분에 부드럽게 나타나고 사라져요!</p>
-    </div>
-
-    <hr>
-
-    <button @click="open2 = !open2">빠르게 토글</button>
-    <div
-        x-show="open2"
-        class="box"
-        style="display: none;"
-
-        x-transition:enter.duration.100ms
-        x-transition:leave.duration.100ms
-    >
-        <p>이 상자는 100ms(0.1초)로 아주 빠르게 움직여요!</p>
-    </div>
-</div>-->
-
-<!--<div x-data='{ "name": "홍길동", "message": "안녕하세요." }'>
-    <h1>Welcome!</h1>
-    <h2 x-text="name + '님, 반갑습니다!'"></h2>
-    <hr>
-    <h2>실시간 입력 바인딩 (x-model)</h2>
-    <input type="text" x-model="name" placeholder="여기에 입력을 입력하세요">
-    <p>
-        **입력된 내용:** <span x-text="name"></span>
-    </p>
-    <p x-text="message"></p>
-    <button @click="message = '바뀐 메세지'">
-        메시지 바꾸기
-    </button>
-</div>
-
-<div x-data='{
-            todos: [
-                { id: 1, text: "Alpine.js 배우기", done: false },
-                { id: 2, text: "Spring Boot 연동하기", done: true }
-            ],
-            newTask: ""
-    }'>
-
-    <h2>할 일 목록 (To-do List)</h2>
-    <input type="text" x-model="newTask" placeholder="새 할 일을 입력하세요">
-    <button @click="
-        if (newTask.trim() !== '') {
-            todos.push({
-                id: todos.length + 1,
-                text: newTask,
-                done: false
-            });
-            newTask = '';
-        }
-    ">할 일 추가
-    </button>
-
-    <hr>
-
-    <ul class="todo-list">
-        <template x-for="item in todos" :key="item.id">
-            <li>
-                <span x-text="item.text" :style="item.done ? 'text-decoration: line-through;' : ''"></span>
-                <button @click="item.done = !item.done">
-                    <span x-text="item.done ? '취소' : '완료'"></span>
-                </button>
-            </li>
-        </template>
-    </ul>
-
-    <p>
-        현재 할 일 개수: <span x-text="todos.length"></span>
-    </p>
-</div>
--->
 </body>
 </html>
